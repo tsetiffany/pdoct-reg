@@ -1,1 +1,0 @@
-# pdoct-reg

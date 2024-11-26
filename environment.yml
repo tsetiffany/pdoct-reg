@@ -1,0 +1,50 @@
+name: pdoct-reg
+channels:
+  - defaults
+dependencies:
+  - bzip2=1.0.8=h2bbff1b_6
+  - ca-certificates=2024.9.24=haa95532_0
+  - libffi=3.4.4=hd77b12b_1
+  - openssl=3.0.15=h827c3e9_0
+  - pip=24.2=py311haa95532_0
+  - python=3.11.10=h4607a30_0
+  - setuptools=75.1.0=py311haa95532_0
+  - sqlite=3.45.3=h2bbff1b_0
+  - tk=8.6.14=h0416ee5_0
+  - tzdata=2024b=h04d1e81_0
+  - vc=14.40=h2eaa2aa_1
+  - vs2015_runtime=14.40.33807=h98bb1dd_1
+  - wheel=0.44.0=py311haa95532_0
+  - xz=5.4.6=h8cc25b3_1
+  - zlib=1.2.13=h8cc25b3_1
+  - pip:
+    - contourpy==1.3.1
+    - cycler==0.12.1
+    - filelock==3.16.1
+    - fonttools==4.55.0
+    - fsspec==2024.10.0
+    - h5py==3.11.0
+    - hdf5storage==0.1.19
+    - jinja2==3.1.4
+    - kiwisolver==1.4.7
+    - kornia==0.7.4
+    - kornia-rs==0.1.7
+    - markupsafe==3.0.2
+    - mat73==0.65
+    - matplotlib==3.9.2
+    - mpmath==1.3.0
+    - networkx==3.4.2
+    - numpy==1.26.4
+    - opencv-python==4.10.0.84
+    - packaging==24.2
+    - pillow==10.4.0
+    - pyparsing==3.2.0
+    - python-dateutil==2.9.0.post0
+    - scipy==1.14.1
+    - six==1.16.0
+    - sympy==1.13.1
+    - tifffile==2024.9.20
+    - torch==2.5.1
+    - torchvision==0.20.1
+    - typing-extensions==4.12.2
+prefix: C:\Users\tiffa\anaconda3\envs\pdoct-reg

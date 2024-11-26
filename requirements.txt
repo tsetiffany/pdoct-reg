@@ -1,0 +1,13 @@
+torch>=1.9.1
+torchvision>=0.3
+numpy~=1.26.4
+opencv-python~=4.10.0.84
+matplotlib~=3.9.0
+kornia>=0.6.11
+pillow~=10.4.0
+mat73~=0.65
+scipy~=1.14.0
+hdf5storage~=0.1.19
+h5py~=3.11.0
+tifffile~=2024.9.20
+packaging~=24.1

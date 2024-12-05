@@ -1,6 +1,7 @@
 # pdoct-reg
 ------ VERSION HISTORY ------
 
+## VERSION 1.X ##  
 v1.1 push 12/04/2024
 - **MATLAB Scripts**
   - improved registration via batch axial matching

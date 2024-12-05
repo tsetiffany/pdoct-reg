@@ -3,7 +3,7 @@
 
 v1.1 push 12/04/2024
 - **MATLAB Scripts**
-  - improved registration via axial matching
+  - improved registration via batch axial matching
   - added code for visualization
   - **new** `evaluateReg.m` for MS-SSIM and CNR quantification
 

@@ -18,8 +18,8 @@ avged = avged_data.super_sum;
 
 % Compute CNR of final averaged image and the reference @ centre B-scan
 
-CNR_fixed = computeCNR(244,664,227,526,100,30,imadjust(mat2gray(fixed(:,:,end/2))));
-CNR_reg = computeCNR(244,664,227,526,100,30,imadjust(mat2gray(abs(avged(:,:,end/2)))));
+[SNR_fixed, CNR_fixed]  = computeSNRandCNR(244,664,227,526,100,30,imadjust(mat2gray(fixed(:,:,end/2))));
+[SNR_reg, CNR_reg]  = computeSNRandCNR(244,664,227,526,100,30,imadjust(mat2gray(abs(avged(:,:,end/2)))));
 
 % Compute SSIM between each registered image with the reference
 for i=1:length(reg_files)
@@ -40,10 +40,13 @@ std_SSIM = std(SSIM);
 % Display
 fprintf('CNR_fixed = %.4f dB\n', CNR_fixed);
 fprintf('CNR_reg = %.4f dB\n', CNR_reg);
+fprintf('SNR_fixed = %.4f dB\n', SNR_fixed);
+fprintf('SNR_reg = %.4f dB\n', SNR_reg);
 fprintf('CNR improvement of %.4f dB\n', CNR_reg-CNR_fixed);
-fprintf('Mean 3D MS-SSIM: %.4f ± %.4f\n', mean_SSIM, std_SSIM);
+fprintf('SNR improvement of %.4f dB\n', SNR_reg-SNR_fixed);
+% fprintf('Mean 3D MS-SSIM: %.4f ± %.4f\n', mean_SSIM, std_SSIM);
 
-function CNR = computeCNR(sigX,sigY,bgX,bgY,w,h,image)
+function [SNR, CNR] = computeSNRandCNR(sigX,sigY,bgX,bgY,w,h,image)
     % Define coordinates for signal and background regions
     signal_coords = [sigX sigY w h]; % [x, y, width, height] for signal ROI
     background_coords = [bgX bgY w h]; % [x, y, width, height] for background ROI
@@ -61,7 +64,13 @@ function CNR = computeCNR(sigX,sigY,bgX,bgY,w,h,image)
     % Compute standard deviation for background
     sigma_background = std(background_region(:));
 
+    % Compute standard deviation for signal (for SNR)
+    sigma_signal = std(signal_region(:));
+
     % Compute CNR
     CNR = 20*log10(abs(mu_signal - mu_background) / sigma_background);
+
+    % Compute SNR
+    SNR = 20 * log10(mu_signal / sigma_signal);
 
 end

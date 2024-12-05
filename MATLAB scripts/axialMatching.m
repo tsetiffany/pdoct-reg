@@ -1,6 +1,6 @@
 
 % Define the filepath where the .mat files are located
-filepath = "H:\OCT_MJ_MFOV\Reg\outputs\registered mat files"; % Update this to your directory path
+filepath = "H:\OCT_MJ_LFOV\Reg\outputs_withGMC\registered_mat_files\axmat_test"; % Update this to your directory path
 
 % Get the list of .mat files in the directory
 files = dir(fullfile(filepath, '*.mat'));
@@ -23,32 +23,35 @@ for i=1:length(reg_files)
     reg_data = load(fullfile(filepath, reg_file));
     reg = reg_data.reg;
 
-    usfac = 1; % upsampling factor
     axmat = reg;
-    
-    %     figure;
-    %     subplot(2,2,1); imagesc(mean(abs(vol_mcorr),3)); title('Unaligned averaged Bscan'); xlabel("A-scans"); ylabel("Depth"); set(gca, FontSize=15)
-    
+    numBatch = 4; % may need to change this
+   
     % Iterate axial correction until max error is below 0.25 pixels
     ii = 0;
     yshift_global = 1;
-    while max(abs(yshift_global)) > 0.25 % Iterates until maximum axial shift is < 0.25 px
+    while max(abs(yshift_global)) > 0.25 % Iterates until maximum axial shift is < 0 px
         ii = ii + 1;
-        [axmat, yshift_global, xshift_global] = mcorrLocal_axial(fixed,reg);
+        [axmat, yshift_global, xshift_global] = mcorrLocal_axial(fixed,reg,numBatch);
         if ii > 10
             break
         end
     end
-       disp("Axial registration completed in " + num2str(ii) + " iterations and " + num2str(toc) + " s")
 
-       % Save the final axmat file
-       [~, reg_name, ~] = fileparts(reg_file);
-       output_file = fullfile(filepath, reg_name + "_axmat.mat");
-       save(output_file, 'axmat', '-v7.3');
+    disp("Axial registration completed in " + num2str(ii) + " iterations and " + num2str(toc) + " s")
 
-       disp("Saved registered volume to " + output_file);
-      
+    % Save the final axmat file
+    [~, reg_name, ~] = fileparts(reg_file);
+    output_file = fullfile(filepath, reg_name + "_axmat.mat");
+    save(output_file, 'axmat', '-v7.3');
+
+    disp("Saved registered volume to " + output_file);
+    
+    for k=1:600
+        imshowpair(imadjust(mat2gray(fixed(:,:,k))),imadjust(mat2gray(abs(axmat(:,:,k)))))
+    end
+
 end
+
 
 % for ii = 1:size(reg_axmat,3)
 %     img1 = imadjust(mat2gray(squeeze(fixed(:,2:end-2,ii))));

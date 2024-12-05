@@ -1,5 +1,5 @@
 % Define the filepath where the .mat files are located
-filepath = "H:\OCT_MJ_MFOV\Reg\outputs\registered mat files"; % Update this to your directory path
+filepath = "H:\OCT_MJ_MFOV\Reg\outputs_withGMC\registered_mat_files"; % Update this to your directory path
 
 % Get the list of .mat files in the directory
 files = dir(fullfile(filepath, '*.mat'));
@@ -31,10 +31,13 @@ end
 
 averaged_vol = super_sum./6;
 enface = imadjust(mat2gray(squeeze(mean(abs(averaged_vol(:,:,:))))));
-figure;imshow(enface(20:580,20:580))
+figure;imshow(enface(25:end-20,25:end-20))
+imwrite(flipud(imrotate(enface(25:end-20,25:end-20),90)), "H:\OCT_MJ_MFOV\Reg\outputs_withGMC\registered_mat_files\registered_enface.tif")
 
+figure;
 for i=1:600
     imshow(imadjust(mat2gray((abs(super_sum(:,:,i))))))
+    imwrite(uint8(255* imadjust(mat2gray(abs(super_sum(:,:,i))))),fullfile(filepath, 'FINAL_OCT_reg_avg_volume.tif'),'WriteMode','append');
 end
 
 % Save the resulting super sum volume

@@ -1,6 +1,6 @@
 
 % Define the filepath where the .mat files are located
-filepath = "H:\OCT_MJ_LFOV\Reg\outputs_withGMC\registered_mat_files\axmat_test"; % Update this to your directory path
+filepath = "H:\LFOV\Reg\outputs\registered_mat_files"; % Update this to your directory path
 
 % Get the list of .mat files in the directory
 files = dir(fullfile(filepath, '*.mat'));
@@ -24,20 +24,11 @@ for i=1:length(reg_files)
     reg = reg_data.reg;
 
     axmat = reg;
-    numBatch = 4; % may need to change this
+    numBatch = 100; % may need to change this
    
-    % Iterate axial correction until max error is below 0.25 pixels
-    ii = 0;
-    yshift_global = 1;
-    while max(abs(yshift_global)) > 0.25 % Iterates until maximum axial shift is < 0 px
-        ii = ii + 1;
-        [axmat, yshift_global, xshift_global] = mcorrLocal_axial(fixed,reg,numBatch);
-        if ii > 10
-            break
-        end
-    end
+    [axmat, yshift_global] = mcorrLocal_axial(fixed,reg,numBatch);
 
-    disp("Axial registration completed in " + num2str(ii) + " iterations and " + num2str(toc) + " s")
+    disp("Axial registration completed in " + num2str(toc) + " s")
 
     % Save the final axmat file
     [~, reg_name, ~] = fileparts(reg_file);
@@ -46,9 +37,11 @@ for i=1:length(reg_files)
 
     disp("Saved registered volume to " + output_file);
     
-    for k=1:600
-        imshowpair(imadjust(mat2gray(fixed(:,:,k))),imadjust(mat2gray(abs(axmat(:,:,k)))))
-    end
+     for k=1:600
+         imshowpair(imadjust(mat2gray(fixed(:,:,k))),imadjust(mat2gray(abs(axmat(:,:,k)))))
+     end
+
+    close all;
 
 end
 

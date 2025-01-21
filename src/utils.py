@@ -13,8 +13,15 @@ def none_or_str(value):
         return None
     return value
 
-def load_image(path, size=(256, 256), mode='rgb'):
+def load_image(path, size, mode='rgb'):
     x = Image.open(path)
+    # Define the cropping region (left, upper, right, lower)
+    # left = 20  # Remove 20 pixels from the left
+    # upper = 0  # Keep the top unchanged
+    # right = 580  # Remove 20 pixels from the right (600 - 20)
+    # lower = 600  # Keep the bottom unchanged
+    # # Crop the image
+    # cropped_image = x.crop((left, upper, right, lower))
     x = Resize(size)(x)
     x = Grayscale()(x) #if mode == 'gray' else x
     x = ToTensor()(x)

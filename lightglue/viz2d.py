@@ -81,7 +81,7 @@ def plot_images(imgs, titles=None, cmaps="gray", dpi=100, pad=0.5, adaptive=True
     fig.tight_layout(pad=pad)
 
 
-def plot_keypoints(kpts, colors="lime", ps=4, axes=None, a=1.0):
+def plot_keypoints(kpts, colors="cyan", ps=4, axes=None, a=1.0):
     """Plot keypoints for existing images.
     Args:
         kpts: list of ndarrays of size (N, 2).

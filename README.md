@@ -2,6 +2,11 @@
 ------ VERSION HISTORY ------
 
 ## VERSION 1.X ##  
+v1.3 push 04/23/2025
+- Add DOPU registration to Python script
+- **MATLAB Scripts**
+  - **new** `extractSeg.m` for generating SVP and DVP images based on 3 segmentation lines (ILM, IPL, ONL)
+
 v1.2 push 01/21/2025
 - Python script now autoloads and registers all volumes with single run
 - file error catching

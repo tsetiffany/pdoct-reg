@@ -2,7 +2,16 @@
 ------ VERSION HISTORY ------
 
 ## VERSION 1.X ##  
-v1.2 push 01/21/2025
+v1.3.1 `OCTA` branch push 04/24/2025
+- **MATLAB Scripts**
+  - **new** submit `averageVolumes.m`, `rmovMotion.m` (remove OCTA motion white strip artifacts) and `getSynthFixed` (generate motion-free template) to new OCTA branch
+
+v1.3 `main` push 04/23/2025
+- Add DOPU registration to Python script
+- **MATLAB Scripts**
+  - **new** `extractSeg.m` for generating SVP and DVP images based on 3 segmentation lines (ILM, IPL, ONL)
+
+v1.2 `main` push 01/21/2025
 - Python script now autoloads and registers all volumes with single run
 - file error catching
 - minor changes
@@ -10,13 +19,13 @@ v1.2 push 01/21/2025
   - improved batchwise axial matching with interpolation
   - other minor changes
 
-v1.1 push 12/04/2024
+v1.1 `main` push 12/04/2024
 - **MATLAB Scripts**
   - improved registration via batch axial matching
   - added code for visualization
   - **new** `evaluateReg.m` for MS-SSIM, SNR and CNR quantification
 
-v1.0 push 11/25/2024
+v1.0 `main` push 11/25/2024
 - **Entrypoint**: `main.py`
 - **2D Feature Matching** (Python)
 - **3D Registration** (Python)

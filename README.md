@@ -4,7 +4,7 @@
 ## VERSION 1.X ##  
 v1.3.1 `OCTA` branch push 04/24/2025
 - **MATLAB Scripts**
-  - **new** submit `averageVolumes.m`, `rmovMotion.m` (remove OCTA motion white strip artifacts) and `getSynthFixed` (generate motion-free template) to new OCTA branch
+  - **new** submit `averageVolumes.m`, `rmovMotion.m` (remove OCTA motion white strip artifacts), `getSynthFixed` (generate motion-free template) and `generateOCTAenface.m` (extracts SVP/DVP based on pixel height, notch filtering, CLAHE) to new OCTA branch
 
 v1.3 `main` push 04/23/2025
 - Add DOPU registration to Python script

@@ -1,5 +1,14 @@
 # pdoct-reg
 ------ VERSION HISTORY ------
+## VERSION 2.X ##  
+v2.0 `main` branch push 06/06/2025
+- Major changes:
+  - `axialMatching.m`, `averageVolumes.m` are now functions to be called by new main function `mainPostProc.m`
+  - `mainPostProc.m` should be run directly on Python outputs to minimize scripts in post-processing
+  - `genDOPUComposite.m` for composite overlay visualization
+  - `globalMCorr.py` now incorporated in main.py
+  - `eyeliner.py` includes support for DOPU registration
+- This version is to be used for 2025 journal submission
 
 ## VERSION 1.X ##  
 v1.3.1 `OCTA` branch push 04/24/2025

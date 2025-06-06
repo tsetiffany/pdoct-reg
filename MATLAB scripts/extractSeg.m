@@ -1,6 +1,7 @@
 clc, clearvars, close all
 tic
 
+% Extracting en-face images from manually segmented volumes (nifti)
 file_dir = "C:\Users\tiffa\Downloads\Untitled.nii.gz";
 OCT = load('I:\LFOV_500x500\2025-03-17T16-12-31.573165\573165_avgOCT.mat');
 

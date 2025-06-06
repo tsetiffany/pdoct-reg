@@ -24,7 +24,7 @@
 %     end
 % end
 
-function [vol_mcorr, yshift_global] = mcorrLocal_axial(fixed, reg, numBatch)
+function [vol_mcorr, dopu_mcorr, yshift_global] = mcorrLocal_axial(fixed, reg, reg_dopu, numBatch)
     numLines = size(fixed, 2);
     numFrames = size(fixed, 3);
     sizeBatch = ceil(numLines / numBatch);
@@ -55,6 +55,7 @@ function [vol_mcorr, yshift_global] = mcorrLocal_axial(fixed, reg, numBatch)
     for k = 1:numFrames
         for j = 1:numLines
             vol_mcorr(:,j,k) = circshift(reg(:,j,k),[yshift_global(j,k),0]);
+            dopu_mcorr(:,j,k) = circshift(reg_dopu(:,j,k),[yshift_global(j,k),0]);
         end
     end
 end

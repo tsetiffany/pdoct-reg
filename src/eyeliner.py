@@ -13,7 +13,7 @@ from scipy.ndimage import gaussian_filter
 
 class EyeLinerP():
     ''' API for pairwise retinal image registration '''
-    def __init__(self, kp_method='splg', reg='affine',
+    def __init__(self, kp_method='splg', reg='tps',
                  lambda_tps=1., image_size=(3, 256, 256), device='cpu'
     ):
         self.kp_method = kp_method
@@ -228,10 +228,11 @@ class EyeLinerP():
 
         return warped_kp
 
-    def __call__(self, fixed_image, moving_image, moving_vol):
+    def __call__(self, fixed_image, moving_image, moving_vol, moving_dopu):
         fixed_image = fixed_image.to(self.device)
         moving_image = moving_image.to(self.device)
         moving_vol = moving_vol.to(self.device)
+        moving_dopu = moving_dopu.to(self.device)
 
         fixed_kpts, moving_kpts = self.get_corr_keypoints(fixed_image, moving_image)
         # kpts_fixed, kpts_moving = self.KPRefiner(fixed_kpts, moving_kpts)
@@ -240,6 +241,7 @@ class EyeLinerP():
         reg_image = self.apply_transform_2d(theta, moving_image)
 
         reg_volume = self.apply_transform_to_volume(theta, moving_vol, mode="bilinear")
+        reg_dopu = self.apply_transform_to_volume(theta, moving_dopu, mode="bilinear")
 
         # # TEST WITH COMPLEX DATA
         # magnitude = magnitude.to(self.device)
@@ -252,5 +254,5 @@ class EyeLinerP():
         #
         # reg_volume = torch.complex(real_part, imag_part)
 
-        return fixed_kpts, moving_kpts, reg_image, reg_volume
+        return fixed_kpts, moving_kpts, reg_image, reg_volume, reg_dopu
 

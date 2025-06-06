@@ -1,5 +1,5 @@
  
-filepath = "H:\OCT_MJ_LFOV\Reg";
+filepath = "I:\OCTA_Mohammad_0311\LFOV_test\ProcdData\OCTA_Mohammad_0311";
 vol_files = dir(fullfile(filepath, '*.mat'));
 
 for idx = 1:length(vol_files)
@@ -8,8 +8,10 @@ for idx = 1:length(vol_files)
     current_file = fullfile(filepath, vol_files(idx).name);
     
     % Load the data from the file
-    vol = load(current_file).OCT;
-
+    file_data = load(current_file);
+    var_name = fieldnames(file_data); % Get the variable name(s)
+    vol = file_data.(var_name{1});
+    
     OCT_mcorr = vol;
     numFrames = size(OCT_mcorr,3);
     startFrame = round(numFrames/2);
@@ -43,7 +45,8 @@ for idx = 1:length(vol_files)
     new_filename = fullfile(filepath, name + "_mcorr.mat");
     
     % Save the processed data to the new file
-    save(new_filename, 'OCT_mcorr', '-v7.3');   
+    save(new_filename, 'OCT_mcorr', '-v7.3');
+    disp(['global motion correction ', num2str(idx), '/', num2str(length(vol_files))]);
 
 end
 

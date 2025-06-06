@@ -11,3 +11,5 @@ hdf5storage~=0.1.19
 h5py~=3.11.0
 tifffile~=2024.9.20
 packaging~=24.1
+imageio~=2.37.0
+scikit-image~=0.25.0

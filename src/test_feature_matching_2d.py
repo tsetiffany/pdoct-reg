@@ -25,8 +25,8 @@ def visualize_key_points(kpts0, img0, kpts1, img1, fname):
     viz2d.save_plot(join(output_dir, fname))
 
 
-input_dir = 'I:\\2025ResearchDay\\test'
-output_dir = 'I:\\2025ResearchDay\\test'
+input_dir = 'I:\\Mo_test'
+output_dir = 'I:\\Mo_test'
 
 os.makedirs(output_dir, exist_ok=True)  # Ensure the output directory exists
 fixed_image_fname = next(
@@ -35,7 +35,7 @@ moving_image_fname = next(
         (f for f in os.listdir(input_dir) if f.endswith('.tif') and not f.startswith('fixed_')), None)
 # fixed_image_fname = "new_fixed.tif"
 # moving_image_fname = "new_moving.tif"
-numAscans, numBscans = 1000,1000
+numAscans, numBscans = 500,500
 
 test_FM = EyeLinerP(image_size=(3,numBscans,numAscans))
 

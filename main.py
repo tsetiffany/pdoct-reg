@@ -132,7 +132,7 @@ def main(fixed_vol_fname, fixed_image_fname, fixed_dopu_vol_fname, moving_vol_fn
     hdf5storage.savemat(join(output_dir, f'moving_vol_{moving_vol_fname[:-4]}.mat'), {'moving': moving_vol},
                         format='7.3')
     hdf5storage.savemat(join(output_dir, f'reg_vol_{moving_vol_fname[:-4]}.mat'), {'reg': reg_vol}, format='7.3')
-    hdf5storage.savemat(join(output_dir, f'reg_dopu_vol_{moving_vol_fname[:-4]}.mat'), {'reg_dopu': reg_dopu_vol}, format='7.3')
+    hdf5storage.savemat(join(output_dir, f'reg_dopu_vol_{moving_dopu_fname[:-4]}.mat'), {'reg_dopu': reg_dopu_vol}, format='7.3')
 
     print('save complete')
     print('total time:', time.time() - start_time)
@@ -153,12 +153,12 @@ if __name__ == "__main__":
     # input_dir = 'H:\\mouseOCT_new\\test'
     # output_dir = 'H:\\mouseOCT_new\\test\\outputs'
 
-    input_dir = 'I:\\2025April17_MJDOPU\\Reg\\test'
-    output_dir = 'I:\\2025April17_MJDOPU\\Reg\\outputs'
+    input_dir = 'I:\\PS438_OS\\Reg'
+    output_dir = 'I:\\PS438_OS\\Reg\\outputs'
 
     os.makedirs(output_dir, exist_ok=True)  # Ensure the output directory exists
 
-    # global_mcorr(input_dir)  # Bidirectional global motion correction
+    global_mcorr(input_dir)  # Bidirectional global motion correction
 
     # Auto-detect the fixed volume and image
     fixed_vol_fname = next(

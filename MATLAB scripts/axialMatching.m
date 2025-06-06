@@ -1,50 +1,66 @@
-
-% Define the filepath where the .mat files are located
-filepath = "H:\LFOV\Reg\outputs\registered_mat_files"; % Update this to your directory path
-
-% Get the list of .mat files in the directory
-files = dir(fullfile(filepath, '*.mat'));
-
-% Identify the fixed file (filename starts with 'fixed')
-fixed_file = files(contains({files.name}, 'fixed', 'IgnoreCase', true)).name;
-
-% Load the fixed volume
-fixed_data = load(fullfile(filepath, fixed_file));
-fixed = fixed_data.fixed;
-
-% Filter the list of files to exclude the fixed file
-reg_files = files(~contains({files.name}, 'fixed', 'IgnoreCase', true));
-
-for i=1:length(reg_files)
-    tic
-    reg_file = reg_files(i).name;
+function output_filepath = axialMatching(filepath)
     
-    % Load the reg volume
-    reg_data = load(fullfile(filepath, reg_file));
-    reg = reg_data.reg;
-
-    axmat = reg;
-    numBatch = 100; % may need to change this
-   
-    [axmat, yshift_global] = mcorrLocal_axial(fixed,reg,numBatch);
-
-    disp("Axial registration completed in " + num2str(toc) + " s")
-
-    % Save the final axmat file
-    [~, reg_name, ~] = fileparts(reg_file);
-    output_file = fullfile(filepath, reg_name + "_axmat.mat");
-    save(output_file, 'axmat', '-v7.3');
-
-    disp("Saved registered volume to " + output_file);
+    % filepath = "I:\PS438_OS\Reg\outputs"; % Update this to your directory path
+    output_filepath = fullfile(filepath,"registered_mat_files");
+    mkdir(output_filepath);
     
-     for k=1:600
-         imshowpair(imadjust(mat2gray(fixed(:,:,k))),imadjust(mat2gray(abs(axmat(:,:,k)))))
-     end
+    % Get the list of .mat files in the directory
+    files = dir(fullfile(filepath, '*.mat'));
+    
+    % Identify the fixed file (filename starts with 'fixed')
+    fixed_file = files(contains({files.name}, 'fixed', 'IgnoreCase', true) & contains({files.name}, 'octv_mcorr', 'IgnoreCase', true)).name;
+    
+    % Load the fixed volume
+    fixed_data = load(fullfile(filepath, fixed_file));
+    fixed = fixed_data.fixed;
+    
+    % Filter the list of files to exclude the fixed file
+    reg_oct_files = files(~contains({files.name}, 'fixed', 'IgnoreCase', true) & contains({files.name}, 'reg_vol', 'IgnoreCase', true) & contains({files.name}, 'octv_mcorr', 'IgnoreCase', true));
+    reg_dopu_files = files(~contains({files.name}, 'fixed', 'IgnoreCase', true) & contains({files.name}, 'reg', 'IgnoreCase', true) & contains({files.name}, 'dopu_mcorr', 'IgnoreCase', true));
+    
+    for i=1:length(reg_oct_files)
+        tic
+        reg_oct_file = reg_oct_files(i).name;
+        reg_dopu_file = reg_dopu_files(i).name;
+        
+        % Load the reg volume
+        reg_oct_data = load(fullfile(filepath, reg_oct_file));
+        reg_oct = reg_oct_data.reg;
+    
+        reg_dopu_data = load(fullfile(filepath, reg_dopu_file));
+        reg_dopu = reg_dopu_data.reg_dopu;
+    
+        axmat = reg_oct;
+        axmat_dopu = reg_dopu;
+    
+        numBatch = 60; % may need to change this
+       
+        [axmat_oct, axmat_dopu, yshift_global] = mcorrLocal_axial(fixed,reg_oct,reg_dopu,numBatch);
+    
+        disp("Axial registration completed in " + num2str(toc) + " s")
+    
+        % Save the final axmat file
+        [~, reg_name, ~] = fileparts(reg_oct_file);
+        output_file = fullfile(output_filepath, reg_name + "_axmat.mat");
+        save(output_file, 'axmat_oct', '-v7.3');
+    
+        [~, reg_dopu_name, ~] = fileparts(reg_dopu_file);
+        output_file_dopu = fullfile(output_filepath, reg_dopu_name + "_axmat.mat");
+        save(output_file_dopu, 'axmat_dopu', '-v7.3');
+    
+        disp("Saved registered volume to " + output_file);
+        
+         for k=1:size(reg_oct,3)
+             imshowpair(imadjust(mat2gray(fixed(:,:,k))),imadjust(mat2gray(abs(axmat_oct(:,:,k)))))
+             imshow(imadjust(mat2gray(axmat_oct(:,:,k))))
+         end
+    
+        close all;
 
-    close all;
+    end
 
+    disp("Axial matching complete for all volumes");
 end
-
 
 % for ii = 1:size(reg_axmat,3)
 %     img1 = imadjust(mat2gray(squeeze(fixed(:,2:end-2,ii))));

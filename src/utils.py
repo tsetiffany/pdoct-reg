@@ -27,7 +27,7 @@ def load_image(path, size, mode='rgb'):
     x = ToTensor()(x)
     return x.unsqueeze(0)
 
-def load_volume(path, size=(256,256)):
+def load_volume(path, size):
     vol = mat73.loadmat(path)
     key = next(iter(vol.values()))
     # Adjusting volume dimensions to swap axes for orientation
@@ -35,8 +35,17 @@ def load_volume(path, size=(256,256)):
     # Normalize between [0, 1]
     # x = (x - x.min()) / (x.max() - x.min())
     x = np.transpose(x, (1, 2, 0))
-    x = ToTensor()(x.copy())
-    return x.unsqueeze(0)
+
+    resized_slices = []
+    for i in range(x.shape[2]):
+        slice_ = Image.fromarray(x[..., i])
+        slice_ = Resize(size)(slice_)
+        slice_ = ToTensor()(slice_)
+        resized_slices.append(slice_)
+
+    # Stack and add batch dimension
+    x = torch.stack(resized_slices, dim=1)  # Shape: [1, C=1, D, H, W]
+    return x  # Final shape: [1, C, D, H, W]
 
 
 class TPS:       

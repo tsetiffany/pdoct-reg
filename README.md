@@ -1,6 +1,11 @@
 # pdoct-reg
 ------ VERSION HISTORY ------
 ## VERSION 2.X ##  
+v2.0.1 `main` branch push 06/30/2025
+- `utils.py` bug fixes when loading in volumes, can now properly resize to desired shape
+  - note that selecting a larger en-face size will result in better keypoint detection especially in UWFOV
+  - `lightglue.py` parameter `filter_threshold` can also be tuned
+
 v2.0 `main` branch push 06/06/2025
 - Major changes:
   - `axialMatching.m`, `averageVolumes.m` are now functions to be called by new main function `mainPostProc.m`

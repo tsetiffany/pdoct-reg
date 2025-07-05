@@ -1,6 +1,10 @@
 # pdoct-reg
 ------ VERSION HISTORY ------
 ## VERSION 2.X ##  
+v2.0.2 `main` branch push 07/04/2025
+- `axialMatching.m`, `averageVolumes.m` file directory updates
+- `axialMatching.m` now takes a parameter `numBatch` 
+
 v2.0.1 `main` branch push 06/30/2025
 - `utils.py` bug fixes when loading in volumes, can now properly resize to desired shape
   - note that selecting a larger en-face size will result in better keypoint detection especially in UWFOV

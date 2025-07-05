@@ -1,19 +1,19 @@
 function [averaged_oct, averaged_dopu] = averageVolumes(filepath)
     
-    % filepath = "I:\PS438_OS\Reg\outputs\registered_mat_files"; % Update this to your directory path
-    
+    [parent,~,~] = fileparts(filepath);
     % Get the list of .mat files in the directory
     files = dir(fullfile(filepath, '*.mat'));
+    fixed_files = dir(fullfile(parent, '*.mat'));
     
     % Identify the fixed file (filename starts with 'fixed')
-    fixed_file = files(contains({files.name}, 'fixed', 'IgnoreCase', true) & contains({files.name}, 'octv', 'IgnoreCase', true)).name;
-    fixed_dopu_file = files(contains({files.name}, 'fixed', 'IgnoreCase', true) & contains({files.name}, 'dopu', 'IgnoreCase', true)).name;
+    fixed_file = fixed_files(contains({fixed_files.name}, 'fixed', 'IgnoreCase', true) & contains({fixed_files.name}, 'octv', 'IgnoreCase', true)).name;
+    fixed_dopu_file = fixed_files(contains({fixed_files.name}, 'fixed', 'IgnoreCase', true) & contains({fixed_files.name}, 'dopu', 'IgnoreCase', true)).name;
     
     % Load the fixed volume
-    fixed_data = load(fullfile(filepath, fixed_file));
+    fixed_data = load(fullfile(parent, fixed_file));
     fixed = fixed_data.fixed;
     
-    fixed_dopu_data = load(fullfile(filepath, fixed_dopu_file));
+    fixed_dopu_data = load(fullfile(parent, fixed_dopu_file));
     fixed_dopu = fixed_dopu_data.fixed_dopu;
     
     
@@ -23,9 +23,9 @@ function [averaged_oct, averaged_dopu] = averageVolumes(filepath)
     
     % Initialize the super sum volume with the fixed volume
     super_sum_oct = fixed;
-    
     super_sum_dopu = fixed_dopu;
     
+    disp('Generating super sum...');
     % Loop through each axially matched file and add it to the super sum
     for i = 1:length(reg_oct_files)
         % Load the current axmat file
@@ -55,7 +55,6 @@ function [averaged_oct, averaged_dopu] = averageVolumes(filepath)
     figure;
     for i=1:size(averaged_oct,3)
         imshow(imadjust(mat2gray((abs(averaged_oct(:,:,i))))))
-        pause(0.01)
         imwrite(uint8(255* imadjust(mat2gray(abs(averaged_oct(:,:,i))))),fullfile(filepath, 'FINAL_OCT_reg_avg_volume.tif'),'WriteMode','append');
         imwrite(uint8(255* imadjust(mat2gray(abs(averaged_dopu(:,:,i))))),fullfile(filepath, 'FINAL_DOPU_reg_avg_volume.tif'),'WriteMode','append');
         imwrite(uint8(255* imadjust(mat2gray(abs(fixed(:,:,i))))),fullfile(filepath, 'fixed_oct_volume.tif'),'WriteMode','append');
@@ -69,6 +68,14 @@ function [averaged_oct, averaged_dopu] = averageVolumes(filepath)
     output_dopu_filename = fullfile(filepath, 'FINAL_DOPU_reg_avg_volume.mat');
     save(output_dopu_filename, 'averaged_dopu', '-v7.3');
     
-    
+    disp('Organizing directory...');
+    src_fixed = fullfile(parent,fixed_file);
+    src_dopu = fullfile(parent, fixed_dopu_file);
+    dst_fixed = fullfile(filepath,fixed_file);
+    dst_dopu = fullfile(filepath,fixed_dopu_file);
+
+    movefile(src_fixed,dst_fixed);
+    movefile(src_dopu,dst_dopu);
+
     disp('Super sum volume created and saved.');
 end

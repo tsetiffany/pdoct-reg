@@ -8,10 +8,11 @@
 
 %% COMPLETE REGISTRATION
 
-filepath = 'I:\PS438_OS\Reg\outputs'; % Update this to Python output directory
+filepath = 'I:\1. Reg_Manuscript\MJ_20250618_FOV_reg\UWFOV\Reg\outputs'; % Update this to Python output directory
+numBatch = 60;
 
 % Axial matching
-output_filepath = axialMatching(filepath);
+output_filepath = axialMatching(filepath,numBatch);
 
 % Averaging
 [averaged_oct, averaged_dopu] = averageVolumes(output_filepath);
@@ -28,7 +29,7 @@ for i=1:size(averaged_dopu,3)
     imwrite(uint8(255*flipud(DOPU_Bscans(:,:,:,i))),cmap_dopu_r,fullfile(output_filepath,'FINAL_DOPU_COMP_reg_avg_volume.tif'),'WriteMode','append');
 end
 
-save(fullfile(output_filepath,'FINAL_DOPU_COMP_reg_avg_volume'), 'DOPU_Bscans', '-v7.3');
+% save(fullfile(output_filepath,'FINAL_DOPU_COMP_reg_avg_volume'), 'DOPU_Bscans', '-v7.3');
 
 %% DOPU ENFACE IMAGE GENERATION
 

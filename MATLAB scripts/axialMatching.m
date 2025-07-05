@@ -1,6 +1,8 @@
-function output_filepath = axialMatching(filepath)
+function output_filepath = axialMatching(filepath,numBatch)
     
-    % filepath = "I:\PS438_OS\Reg\outputs"; % Update this to your directory path
+%     [parent,~,~] = fileparts(filepath);
+%     fixed_files = dir(fullfile(parent, '*.mat'));
+
     output_filepath = fullfile(filepath,"registered_mat_files");
     mkdir(output_filepath);
     
@@ -17,7 +19,7 @@ function output_filepath = axialMatching(filepath)
     % Filter the list of files to exclude the fixed file
     reg_oct_files = files(~contains({files.name}, 'fixed', 'IgnoreCase', true) & contains({files.name}, 'reg_vol', 'IgnoreCase', true) & contains({files.name}, 'octv_mcorr', 'IgnoreCase', true));
     reg_dopu_files = files(~contains({files.name}, 'fixed', 'IgnoreCase', true) & contains({files.name}, 'reg', 'IgnoreCase', true) & contains({files.name}, 'dopu_mcorr', 'IgnoreCase', true));
-    
+
     for i=1:length(reg_oct_files)
         tic
         reg_oct_file = reg_oct_files(i).name;
@@ -32,8 +34,6 @@ function output_filepath = axialMatching(filepath)
     
         axmat = reg_oct;
         axmat_dopu = reg_dopu;
-    
-        numBatch = 60; % may need to change this
        
         [axmat_oct, axmat_dopu, yshift_global] = mcorrLocal_axial(fixed,reg_oct,reg_dopu,numBatch);
     
@@ -52,7 +52,7 @@ function output_filepath = axialMatching(filepath)
         
          for k=1:size(reg_oct,3)
              imshowpair(imadjust(mat2gray(fixed(:,:,k))),imadjust(mat2gray(abs(axmat_oct(:,:,k)))))
-             imshow(imadjust(mat2gray(axmat_oct(:,:,k))))
+%              imshow(imadjust(mat2gray(axmat_oct(:,:,k))))
          end
     
         close all;

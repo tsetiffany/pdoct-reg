@@ -43,11 +43,9 @@ def overlay_image_2d(reg, fixed, fname):
     # img_uint8 = (img * 255).astype(np.uint8) if img.max() <= 1 else img.astype(np.uint8)
     tiff.imwrite(join(output_dir, fname), img)
 
-
 def overlay_image_3d(reg, fixed, fname):
     img = cv2.addWeighted(fixed, 0.5, reg, 0.5, 0)
     tiff.imwrite(join(output_dir, fname), img)
-
 
 def visualize_key_points(kpts0, img0, kpts1, img1, fname):
     axes = viz2d.plot_images([img0, img1])
@@ -59,8 +57,19 @@ def visualize_key_points(kpts0, img0, kpts1, img1, fname):
     viz2d.plot_keypoints([kpts0, kpts1], ps=6)  #, colors=[kpc0, kpc1], ps=6)
     viz2d.save_plot(join(output_dir, fname))
 
+def reorient_volume(vol,mode):
+    v = np.copy(vol)
+    if mode == 0:
+        v = np.flip(np.transpose(vol, (0, 2, 1)), axis=0)
+    elif mode == 1:
+        v = np.flip(np.flip(np.transpose(vol, (0, 2, 1)), axis=0),axis=2)
+    elif mode == 2:
+        v = np.transpose(vol, (0, 2, 1))
+    else:
+        raise ValueError(f"Unknown mode {mode}")
+    return v
 
-def main(fixed_vol_fname, fixed_image_fname, fixed_dopu_vol_fname, moving_vol_fname, moving_image_fname, moving_dopu_fname,
+def main(mode,fixed_vol_fname, fixed_image_fname, fixed_dopu_vol_fname, moving_vol_fname, moving_image_fname, moving_dopu_fname,
          num_channels, numPoints, numAscans, numBscans, reg, device, input_dir,
          output_dir, save_fixed_vol):
     start_time = time.time()
@@ -100,17 +109,34 @@ def main(fixed_vol_fname, fixed_image_fname, fixed_dopu_vol_fname, moving_vol_fn
 
     print('registration complete')
 
-    overlay_image_3d(np.mean(fixed_vol[:, :, :], axis=0), np.mean(abs(reg_vol[:, :, :]), axis=0),
+    overlay_image_3d(np.mean(fixed_vol[:,:,:], axis=0), np.mean(abs(reg_vol[:, :, :]), axis=0),
                      f'vol_{moving_vol_fname[:-4]}_after_register.tif')
-    overlay_image_3d(np.mean(fixed_vol[:, :, :], axis=0), np.mean(abs(moving_vol[:, :, :]), axis=0),
+    overlay_image_3d(np.mean(fixed_vol[:,:,:], axis=0), np.mean(abs(moving_vol[:,:,:]), axis=0),
                      f'vol_{moving_vol_fname[:-4]}_before_register.tif')
 
+    # overlay_image_2d(fixed_image, moving_image, f'{moving_image_fname[:-4]}_before_register.tif')
+    # overlay_image_2d(reg_image, fixed_image, f'{moving_image_fname[:-4]}_after_register.tif')
+
     # correct B-scan orientation
-    fixed_vol = np.flip(np.transpose(fixed_vol, (0, 2, 1)), axis=0)
-    fixed_dopu_vol = np.flip(np.transpose(fixed_dopu_vol, (0, 2, 1)), axis=0)
-    moving_vol = np.flip(np.transpose(moving_vol, (0, 2, 1)), axis=0)
-    reg_vol = np.flip(np.transpose(abs(reg_vol), (0, 2, 1)), axis=0)
-    reg_dopu_vol = np.flip(np.transpose(abs(reg_dopu_vol), (0, 2, 1)), axis=0)
+    fixed_vol = reorient_volume(fixed_vol, mode)
+    fixed_dopu_vol = reorient_volume(fixed_dopu_vol, mode)
+    moving_vol = reorient_volume(moving_vol, mode)
+    reg_vol = reorient_volume(reg_vol, mode)
+    reg_dopu_vol = reorient_volume(reg_dopu_vol, mode)
+
+    # correct B-scan orientation
+    # if mode == 1:
+    #     fixed_vol = np.flip(np.flip(np.transpose(fixed_vol, (0, 2, 1)), axis=0),axis=2)
+    #     fixed_dopu_vol = np.flip(np.flip(np.transpose(fixed_dopu_vol, (0, 2, 1)), axis=0),axis=2)
+    #     moving_vol = np.flip(np.flip(np.transpose(moving_vol, (0, 2, 1)), axis=0),axis=2)
+    #     reg_vol = np.flip(np.flip(np.transpose(abs(reg_vol), (0, 2, 1)), axis=0),axis=2)
+    #     reg_dopu_vol = np.flip(np.flip(np.transpose(abs(reg_dopu_vol), (0, 2, 1)), axis=0),axis=2)
+    # elif mode == 2:
+    #     fixed_vol = np.flip(np.transpose(fixed_vol, (0, 2, 1)), axis=0)
+    #     fixed_dopu_vol = np.flip(np.transpose(fixed_dopu_vol, (0, 2, 1)), axis=0)
+    #     moving_vol = np.flip(np.transpose(moving_vol, (0, 2, 1)), axis=0)
+    #     reg_vol = np.flip(np.transpose(abs(reg_vol), (0, 2, 1)), axis=0)
+    #     reg_dopu_vol = np.flip(np.transpose(abs(reg_dopu_vol), (0, 2, 1)), axis=0)
 
     # # save volumes as tiff stack
     # for i in range(1000):
@@ -129,8 +155,8 @@ def main(fixed_vol_fname, fixed_image_fname, fixed_dopu_vol_fname, moving_vol_fn
                             format='7.3')
         save_fixed_vol = False  # Set the flag to False to prevent further saving
 
-    hdf5storage.savemat(join(output_dir, f'moving_vol_{moving_vol_fname[:-4]}.mat'), {'moving': moving_vol},
-                        format='7.3')
+    # hdf5storage.savemat(join(output_dir, f'moving_vol_{moving_vol_fname[:-4]}.mat'), {'moving': moving_vol},
+    #                     format='7.3')
     hdf5storage.savemat(join(output_dir, f'reg_vol_{moving_vol_fname[:-4]}.mat'), {'reg': reg_vol}, format='7.3')
     hdf5storage.savemat(join(output_dir, f'reg_dopu_vol_{moving_dopu_fname[:-4]}.mat'), {'reg_dopu': reg_dopu_vol}, format='7.3')
 
@@ -141,24 +167,33 @@ def main(fixed_vol_fname, fixed_image_fname, fixed_dopu_vol_fname, moving_vol_fn
 
 
 if __name__ == "__main__":
+
+    ############################## input params #######################################
     num_channels = 3
-    # MIGHT NEED TO CHANGE THIS
-    # numPoints, numAscans, numBscans = 343, 450, 500
-    numPoints, numAscans, numBscans = 1000, 600, 600
+
+    numPoints, numAscans, numBscans = 1000, 550, 550
+
+    # MODE = 0 SINGLE TIMEPOINT REG ONLY
+    # MODE = 1 SINGLE TIMEPOINT FOR LONGITUDINAL REG
+    # MODE = 2 CO-REGISTER DIFFERENT TIMEPOINTS
+    # note that modes 1 and 2 are to be used consecutively. otherwise, use mode 0.
+    mode = [0,1,2][2]
+    if mode == 2:
+        FLAG_global_mcorr = 0
+    else:
+        FLAG_global_mcorr = 1
+
+    input_dir = 'I:\\3. Zeiss_PD_Reg\\longitudinal_t14'
+    output_dir = input_dir + '\\outputs'
+
+    ###################################################################################
 
     reg = ['tps', 'affine', 'perspective'][0]
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")  # 'mps', 'cpu'
-
-    # CHANGE THIS
-    # input_dir = 'H:\\mouseOCT_new\\test'
-    # output_dir = 'H:\\mouseOCT_new\\test\\outputs'
-
-    input_dir = 'I:\\PS438_OS\\Reg'
-    output_dir = 'I:\\PS438_OS\\Reg\\outputs'
-
     os.makedirs(output_dir, exist_ok=True)  # Ensure the output directory exists
 
-    global_mcorr(input_dir)  # Bidirectional global motion correction
+    if FLAG_global_mcorr == 1:
+        global_mcorr(input_dir)  # Bidirectional global motion correction
 
     # Auto-detect the fixed volume and image
     fixed_vol_fname = next(
@@ -167,11 +202,6 @@ if __name__ == "__main__":
         (f for f in os.listdir(input_dir) if f.startswith('fixed_') and f.endswith('_dopu_mcorr.mat')), None)
     fixed_image_fname = next(
         (f for f in os.listdir(input_dir) if f.startswith('fixed_') and f.endswith('.tif')), None)
-
-    # fixed_vol_fname = next(
-    #     (f for f in os.listdir(input_dir) if f.startswith('fixed_') and f.endswith('_mcorr.mat')), None)
-    # fixed_image_fname = next(
-    #     (f for f in os.listdir(input_dir) if f.startswith('fixed_') and f.endswith('_mcorr.tif')), None)
 
     if not fixed_vol_fname or not fixed_image_fname:
         raise FileNotFoundError("Fixed volume or fixed image not found in the input directory.")
@@ -185,9 +215,6 @@ if __name__ == "__main__":
     dopu_vol_files = [f for f in os.listdir(input_dir) if
                         f.endswith('_dopu_mcorr.mat') and not f.startswith('fixed_')]
 
-    # moving_vol_files = [f for f in os.listdir(input_dir) if f.endswith('_mcorr.mat') and not f.startswith('fixed_')]
-    # image_files = [f for f in os.listdir(input_dir) if f.endswith('_mcorr.tif') and not f.startswith('fixed_')]
-
     # Iterate through all moving volumes
     for idx, moving_vol_fname in enumerate(moving_vol_files, start=1):
         # Extract the prefix (numeric part before '_')
@@ -200,12 +227,13 @@ if __name__ == "__main__":
         if moving_image_fname:
             # Call the main function with current file paths
             save_fixed_vol = main(
+                mode=mode,
                 fixed_vol_fname=fixed_vol_fname,
                 fixed_image_fname=fixed_image_fname,
-                fixed_dopu_vol_fname = fixed_dopu_vol_fname,
+                fixed_dopu_vol_fname=fixed_dopu_vol_fname,
                 moving_vol_fname=moving_vol_fname,
                 moving_image_fname=moving_image_fname,
-                moving_dopu_fname = moving_dopu_fname,
+                moving_dopu_fname=moving_dopu_fname,
                 num_channels=num_channels,
                 numPoints=numPoints,
                 numAscans=numAscans,

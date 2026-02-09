@@ -25,32 +25,46 @@ def visualize_key_points(kpts0, img0, kpts1, img1, fname):
     viz2d.save_plot(join(output_dir, fname))
 
 
-input_dir = 'I:\\Mo_test'
-output_dir = 'I:\\Mo_test'
+input_dir = 'I:\\3. Zeiss_PD_Reg\\intermode_t4\\seg_reg'
+output_dir = input_dir
+dopu = 1
+numAscans, numBscans = 600,600
 
 os.makedirs(output_dir, exist_ok=True)  # Ensure the output directory exists
 fixed_image_fname = next(
-        (f for f in os.listdir(input_dir) if f.startswith('fixed_') and f.endswith('.tif')), None)
+        (f for f in os.listdir(input_dir) if f.startswith('fixed_fundus') and f.endswith('.bmp')), None)
 moving_image_fname = next(
-        (f for f in os.listdir(input_dir) if f.endswith('.tif') and not f.startswith('fixed_')), None)
-# fixed_image_fname = "new_fixed.tif"
-# moving_image_fname = "new_moving.tif"
-numAscans, numBscans = 500,500
+        (f for f in os.listdir(input_dir) if f.endswith('enface.tif') and not f.startswith('fixed_')), None)
+if dopu==1:
+    moving_dopu_fname = next(
+        (f for f in os.listdir(input_dir) if f.endswith('dopu_outer.png') and not f.startswith('fixed_')), None)
+
+
 
 test_FM = EyeLinerP(image_size=(3,numBscans,numAscans))
 
 fixed_image = load_image(join(input_dir, fixed_image_fname), size=(numBscans, numAscans))
 moving_image = load_image(join(input_dir, moving_image_fname), size=(numBscans, numAscans))
+if dopu==1:
+    moving_dopu = load_image(join(input_dir, moving_dopu_fname), size=(numBscans, numAscans))
 
 fixed_image = fixed_image.to(test_FM.device)
 moving_image = moving_image.to(test_FM.device)
+if dopu==1:
+    moving_dopu = moving_dopu.to(test_FM.device)
 fixed_kpts, moving_kpts = test_FM.get_corr_keypoints(fixed_image, moving_image)
 theta = test_FM.get_registration(fixed_kpts, moving_kpts)
 reg_image = test_FM.apply_transform_2d(theta, moving_image)
+if dopu==1:
+    reg_dopu = test_FM.apply_transform_2d(theta, moving_dopu)
 
 reg_image = reg_image.detach().cpu().numpy()[0]
+if dopu==1:
+    reg_dopu = reg_dopu.detach().cpu().numpy()[0]
 fixed_image = fixed_image.detach().cpu().numpy()[0]
 moving_image = moving_image.detach().cpu().numpy()[0]
+if dopu==1:
+    moving_dopu = moving_dopu.detach().cpu().numpy()[0]
 fixed_kpts = fixed_kpts.detach().cpu().numpy()[0]
 moving_kpts = moving_kpts.detach().cpu().numpy()[0]
 
@@ -64,6 +78,9 @@ overlay_image_2d(fixed_image,moving_image,f'{moving_image_fname[:-4]}_before_reg
 overlay_image_2d(reg_image,fixed_image,f'{moving_image_fname[:-4]}_after_register.tif')
 
 # Save the data to a .mat file
-# savemat(join(output_dir,'reg_image_3.mat'), {'reg_image': reg_image})
-#
-# print("Saved registration results to 'reg_data.mat'")
+savemat(join(output_dir,'reg_image.mat'), {'reg_image': reg_image[0]})
+if dopu==1:
+    savemat(join(output_dir,'reg_dopu.mat'), {'reg_dopu': reg_dopu[0]})
+savemat(join(output_dir,'fixed_image.mat'), {'fixed_image': fixed_image[0]})
+
+print("Saved registration results to 'reg_data.mat'")

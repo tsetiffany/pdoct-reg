@@ -321,7 +321,7 @@ class LightGlue(nn.Module):
         "mp": False,  # enable mixed precision
         "depth_confidence": 0.95,  # early stopping, disable with -1
         "width_confidence": 0.99,  # point pruning, disable with -1
-        "filter_threshold": 0.1,  # match threshold
+        "filter_threshold": 0.1,  # match threshold (original 0.1 - decrease to get more matches)
         "weights": None,
     }
 
@@ -330,7 +330,7 @@ class LightGlue(nn.Module):
     pruning_keypoint_thresholds = {
         "cpu": -1,
         "mps": -1,
-        "cuda": 1024,
+        "cuda": 4096, # original 1024
         "flash": 1536,
     }
 

@@ -64,12 +64,70 @@ class EyeLinerP():
         )
         return theta, grid
 
-    def get_registration(self, fixed_kpts, moving_kpts):
+    def _compute_mosaic_grid(self, fixed_kpts_, moving_kpts_):
+        """Compute a TPS backward warp grid over an expanded canvas so no moving
+        content is cropped after warping into fixed space.
+
+        Input keypoints must already be normalised to [-1, 1].
+
+        Returns
+        -------
+        expanded_grid : torch.Tensor [1, H_exp, W_exp, 2]
+            Backward sampling grid. For each pixel in the expanded canvas
+            (which covers the full union of fixed and warped-moving FOVs),
+            gives the coordinate to sample from the moving image.
+        H_exp, W_exp : int
+            Expanded canvas dimensions (>= original H, W when moving FOV
+            extends beyond the fixed FOV after warping).
+        canvas_info : dict
+            {'x_range': (x_min, x_max), 'y_range': (y_min, y_max)} in
+            normalised fixed-space coordinates.
+        """
+        C, H, W = self.image_size
+        tps = TPS(dim=2)
+        lmbda = torch.tensor(self.lambda_tps).to(self.device)
+
+        # --- Step 1: forward TPS (moving → fixed space) ---
+        # Fitted with c_src = moving_kpts_, c_dst = fixed_kpts_.
+        # Evaluating at a moving-image grid point p gives its fixed-space location.
+        theta_fwd = tps.tps_theta_from_points(moving_kpts_, fixed_kpts_, lmbda)
+        fwd_grid = tps.uniform_grid((1, H, W, 3)).to(self.device)
+        # ctrl must match c_src used in fitting (moving_kpts_)
+        fwd_coords = tps.tps(theta_fwd, moving_kpts_, fwd_grid)  # [1, H, W, 2]
+
+        # --- Step 2: canvas extent in normalised fixed coordinates ---
+        x_min = min(-1.0, fwd_coords[..., 0].min().item())
+        x_max = max(1.0, fwd_coords[..., 0].max().item())
+        y_min = min(-1.0, fwd_coords[..., 1].min().item())
+        y_max = max(1.0, fwd_coords[..., 1].max().item())
+
+        # --- Step 3: expanded canvas size (same pixel density as fixed image) ---
+        W_exp = int(round(W * (x_max - x_min) / 2.0))
+        H_exp = int(round(H * (y_max - y_min) / 2.0))
+
+        # --- Step 4: backward TPS (fixed → moving) over the expanded canvas ---
+        # Fitted with c_src = fixed_kpts_, c_dst = moving_kpts_.
+        theta_bwd = tps.tps_theta_from_points(fixed_kpts_, moving_kpts_, lmbda)
+        exp_grid = tps.custom_uniform_grid(
+            (1, H_exp, W_exp, 3),
+            x_range=(x_min, x_max),
+            y_range=(y_min, y_max),
+        ).to(self.device)
+        # ctrl must match c_src of theta_bwd (fixed_kpts_)
+        expanded_grid = tps.tps(theta_bwd, fixed_kpts_, exp_grid)  # [1, H_exp, W_exp, 2]
+
+        canvas_info = {'x_range': (x_min, x_max), 'y_range': (y_min, y_max)}
+        return expanded_grid, H_exp, W_exp, canvas_info
+
+    def get_registration(self, fixed_kpts, moving_kpts, mosaic=False):
 
         if self.reg == 'tps':
             # scale between -1 and 1
             fixed_kpts_ = normalize_coordinates(fixed_kpts, self.image_size[1:])
             moving_kpts_ = normalize_coordinates(moving_kpts, self.image_size[1:])
+            if mosaic:
+                expanded_grid, _, _, _ = self._compute_mosaic_grid(fixed_kpts_, moving_kpts_)
+                return None, expanded_grid  # packed as (theta, grid) tuple for apply_transform_*
             theta = self.compute_tps(
                 moving_kpts_, fixed_kpts_, [1] + list(self.image_size), self.lambda_tps
             )
@@ -119,7 +177,7 @@ class EyeLinerP():
 
         if self.reg == "tps":
             theta, grid = theta
-            assert grid.shape == (1,h,w,2)
+            # grid may be larger than (h, w) in mosaicing mode
             warped_image = F.grid_sample(
                 moving_image, grid=grid, mode="bilinear",
                 padding_mode="zeros", align_corners=False)
@@ -167,7 +225,7 @@ class EyeLinerP():
 
         if self.reg == "tps":
             theta, grid = theta
-            assert grid.shape == (1, h, w, 2)
+            # grid may be larger than (h, w) in mosaicing mode
 
             # Loop through each depth slice
             for i in range(d):
@@ -228,7 +286,7 @@ class EyeLinerP():
 
         return warped_kp
 
-    def __call__(self, fixed_image, moving_image, moving_vol, moving_dopu):
+    def __call__(self, fixed_image, moving_image, moving_vol, moving_dopu, mosaic=False):
         fixed_image = fixed_image.to(self.device)
         moving_image = moving_image.to(self.device)
         moving_vol = moving_vol.to(self.device)
@@ -237,7 +295,10 @@ class EyeLinerP():
         fixed_kpts, moving_kpts = self.get_corr_keypoints(fixed_image, moving_image)
         # kpts_fixed, kpts_moving = self.KPRefiner(fixed_kpts, moving_kpts)
 
-        theta = self.get_registration(fixed_kpts, moving_kpts)
+        # mosaic=True: expand the output canvas to cover the full warped-moving FOV
+        # so no moving content is cropped.  The transform direction (moving→fixed) is
+        # the same; only the output grid is larger.
+        theta = self.get_registration(fixed_kpts, moving_kpts, mosaic=mosaic)
         reg_image = self.apply_transform_2d(theta, moving_image)
 
         reg_volume = self.apply_transform_to_volume(theta, moving_vol, mode="bilinear")

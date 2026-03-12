@@ -48,12 +48,12 @@ def load_volume(path, size):
     return x  # Final shape: [1, C, D, H, W]
 
 
-class TPS:       
+class TPS:
   '''See https://github.com/cheind/py-thin-plate-spline/blob/master/thinplate/numpy.py'''
   def __init__(self, dim):
       self.dim = dim
 
-  def fit(self, c, lmbda):        
+  def fit(self, c, lmbda):
       '''Assumes last dimension of c contains target points.
       
         Set up and solve linear system:
@@ -242,9 +242,33 @@ class TPS:
 
       grid[..., 0] = 1.
       grid[..., 1] = torch.linspace(-1, 1, W)
-      grid[..., 2] = torch.linspace(-1, 1, H).unsqueeze(-1)   
+      grid[..., 2] = torch.linspace(-1, 1, H).unsqueeze(-1)
       if grid.shape[-1] == 4:
-          grid[..., 3] = torch.linspace(-1, 1, D).unsqueeze(-1).unsqueeze(-1)  
+          grid[..., 3] = torch.linspace(-1, 1, D).unsqueeze(-1).unsqueeze(-1)
+      return grid
+
+  def custom_uniform_grid(self, shape, x_range=(-1., 1.), y_range=(-1., 1.)):
+      '''Like uniform_grid but with custom coordinate ranges for mosaicing.
+
+      Params
+      ------
+      shape : tuple
+          NxHxWx3 (2D) or NxDxHxWx3 (3D)
+      x_range : (float, float)
+          Min/max x coordinate (width axis) in normalized fixed space.
+      y_range : (float, float)
+          Min/max y coordinate (height axis) in normalized fixed space.
+      '''
+      if self.dim == 2:
+          _, H, W, _ = shape
+      else:
+          _, D, H, W, _ = shape
+      grid = torch.zeros(shape)
+      grid[..., 0] = 1.
+      grid[..., 1] = torch.linspace(x_range[0], x_range[1], W)
+      grid[..., 2] = torch.linspace(y_range[0], y_range[1], H).unsqueeze(-1)
+      if grid.shape[-1] == 4:
+          grid[..., 3] = torch.linspace(-1, 1, D).unsqueeze(-1).unsqueeze(-1)
       return grid
   
   def grid_from_points(self, ctl_points, tgt_points, grid_shape, **kwargs):
@@ -270,7 +294,8 @@ class TPS:
       lmbda = kwargs['lmbda']
       theta = self.tps_theta_from_points(ctl_points, tgt_points, lmbda)
       return self.deform_points(theta, ctl_points, points)
-  
+
+
 def normalize_coordinates(coords, shape):
     coords_ = coords.clone()
     num_rows, num_cols = shape

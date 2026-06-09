@@ -69,9 +69,9 @@ def reorient_volume(vol,mode):
         raise ValueError(f"Unknown mode {mode}")
     return v
 
-def main(mode,fixed_vol_fname, fixed_image_fname, fixed_dopu_vol_fname, moving_vol_fname, moving_image_fname, moving_dopu_fname,
+def main(mode, fixed_vol_fname, fixed_image_fname, fixed_dopu_vol_fname, moving_vol_fname, moving_image_fname, moving_dopu_fname,
          num_channels, numPoints, numAscans, numBscans, reg, device, input_dir,
-         output_dir, save_fixed_vol):
+         output_dir, save_fixed_vol, mosaic=False):
     start_time = time.time()
     print('loading volumes...')
     torch.set_grad_enabled(False)
@@ -93,7 +93,8 @@ def main(mode,fixed_vol_fname, fixed_image_fname, fixed_dopu_vol_fname, moving_v
     # register images
     eyeliner = EyeLinerP(
         reg=reg, lambda_tps=1.0, image_size=(num_channels, numBscans, numAscans), device=device)
-    fixed_kpts, moving_kpts, reg_image, reg_vol, reg_dopu_vol = eyeliner(fixed_image, moving_image, moving_vol, moving_dopu)
+    fixed_kpts, moving_kpts, reg_image, reg_vol, reg_dopu_vol = eyeliner(
+        fixed_image, moving_image, moving_vol, moving_dopu, mosaic=mosaic)
 
     # visualize registered images, convert to numpy and remove batch dimension
     reg_image = reg_image.detach().cpu().numpy()[0]
@@ -109,10 +110,17 @@ def main(mode,fixed_vol_fname, fixed_image_fname, fixed_dopu_vol_fname, moving_v
 
     print('registration complete')
 
-    overlay_image_3d(np.mean(fixed_vol[:,:,:], axis=0), np.mean(abs(reg_vol[:, :, :]), axis=0),
-                     f'vol_{moving_vol_fname[:-4]}_after_register.tif')
-    overlay_image_3d(np.mean(fixed_vol[:,:,:], axis=0), np.mean(abs(moving_vol[:,:,:]), axis=0),
-                     f'vol_{moving_vol_fname[:-4]}_before_register.tif')
+    if mosaic:
+        # In mosaic mode the registered volume may be larger than fixed_vol,
+        # so a pixel-aligned overlay with fixed_vol is not meaningful.
+        # Save mean-projection of the registered volume on its own.
+        tiff.imwrite(join(output_dir, f'vol_{moving_vol_fname[:-4]}_mosaic.tif'),
+                     np.mean(abs(reg_vol[:, :, :]), axis=0))
+    else:
+        overlay_image_3d(np.mean(fixed_vol[:,:,:], axis=0), np.mean(abs(reg_vol[:, :, :]), axis=0),
+                         f'vol_{moving_vol_fname[:-4]}_after_register.tif')
+        overlay_image_3d(np.mean(fixed_vol[:,:,:], axis=0), np.mean(abs(moving_vol[:,:,:]), axis=0),
+                         f'vol_{moving_vol_fname[:-4]}_before_register.tif')
 
     # overlay_image_2d(fixed_image, moving_image, f'{moving_image_fname[:-4]}_before_register.tif')
     # overlay_image_2d(reg_image, fixed_image, f'{moving_image_fname[:-4]}_after_register.tif')
@@ -188,6 +196,12 @@ if __name__ == "__main__":
 
     ###################################################################################
 
+    # MOSAIC = False  fixed frame registration: output has fixed frame's FOV (moving content
+    #                 that falls outside the fixed FOV is zeroed).
+    # MOSAIC = True   mosaicing: output canvas expands to cover the full warped-moving FOV,
+    #                 so no moving content is cropped after registration.
+    mosaic = False
+
     reg = ['tps', 'affine', 'perspective'][0]
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")  # 'mps', 'cpu'
     os.makedirs(output_dir, exist_ok=True)  # Ensure the output directory exists
@@ -242,7 +256,8 @@ if __name__ == "__main__":
                 device=device,
                 input_dir=input_dir,
                 output_dir=output_dir,
-                save_fixed_vol=save_fixed_vol
+                save_fixed_vol=save_fixed_vol,
+                mosaic=mosaic,
             )
             print(f"Registration {idx}/{len(moving_vol_files)} complete")
         else:

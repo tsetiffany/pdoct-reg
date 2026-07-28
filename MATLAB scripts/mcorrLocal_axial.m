@@ -31,6 +31,13 @@ function [vol_mcorr, dopu_mcorr, yshift_global] = mcorrLocal_axial(fixed, reg, r
     vol_mcorr = reg;
     yshift_global = zeros(numFrames, numBatch);
     
+    use_dopu = ~isempty(reg_dopu);
+    if use_dopu
+        dopu_mcorr = reg_dopu;
+    else
+        dopu_mcorr = [];
+    end
+
     for I = 1:numFrames
         yshift = zeros(1, numBatch); % Initialize for the current frame
         
@@ -55,7 +62,9 @@ function [vol_mcorr, dopu_mcorr, yshift_global] = mcorrLocal_axial(fixed, reg, r
     for k = 1:numFrames
         for j = 1:numLines
             vol_mcorr(:,j,k) = circshift(reg(:,j,k),[yshift_global(j,k),0]);
-            dopu_mcorr(:,j,k) = circshift(reg_dopu(:,j,k),[yshift_global(j,k),0]);
+            if use_dopu
+                dopu_mcorr(:,j,k) = circshift(reg_dopu(:,j,k),[yshift_global(j,k),0]);
+            end
         end
     end
 end

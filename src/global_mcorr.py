@@ -87,8 +87,6 @@ def global_mcorr(filepath):
         plt.figure()
         plt.plot(axialShift)
         plt.title('Axial Motion Estimation - File: ' + name)
-        plt.xlim([1, 500])
-        plt.ylim([-15, 15])
         plt.xlabel('Frame Index')
         plt.ylabel('Axial Shifts (Pixel)')
 
